@@ -45,3 +45,40 @@ extension CharacterDTO {
               episodeCount: episodes.count)
     }
 }
+
+
+extension CharactersDTO {
+    
+    static let mock: Self = .init(
+        characters: [
+            CharacterDTO(
+                characterId: 1,
+                name: "Morty Smity",
+                status: "Alive",
+                species: "Human",
+                gender: "Male",
+                imgURL: "",
+                location: .init(
+                    name: "Citadel of Ricks",
+                    url: "https://rickandmortyapi.com/api/location/3"),
+                episodes: ["https://rickandmortyapi.com/api/episode/1"]
+            ),
+            
+            CharacterDTO(
+                characterId: 1,
+                name: "Summer Smith",
+                status: "Alive",
+                species: "Human",
+                gender: "Male",
+                imgURL: "",
+                location: .init(
+                    name: "Citadel of Ricks",
+                    url: "https://rickandmortyapi.com/api/location/3"),
+                episodes: ["https://rickandmortyapi.com/api/episode/1"]
+            )
+            
+        ]
+    )
+        
+    
+}

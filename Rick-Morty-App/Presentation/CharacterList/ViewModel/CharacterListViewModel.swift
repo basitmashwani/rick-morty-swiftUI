@@ -5,80 +5,72 @@
 //  Created by SyedAbdulBasit on 05/02/2022.
 //
 
-enum CharacterListViewState: Equatable {
-    case loading
-    case loaded
-    case failed(String?)
-}
+import SwiftUI
+import Combine
+
 
 protocol CharacterListViewModelInput {
-    func viewDidLoad()
-    func row(at index: Int) -> CharacterCellItemViewModel
-    func filter(by value: String)
-    func getSelectedItem(at index: Int) -> Character
+    func fetchCharacters()
+    func row(for character: Character) -> CharacterCellItemViewModel
+    func filter(by value: Binding<String>) -> [Character]
 }
 
 protocol CharacterListViewModelOutput {
-    var numberOfRows: Int { get }
     var title: String { get }
 }
 
 protocol CharacterListViewModelProtocol: CharacterListViewModelInput, CharacterListViewModelOutput { }
 
-final class CharacterListViewModel: CharacterListViewModelProtocol {
+
+final class CharacterListViewModel: ObservableObject, CharacterListViewModelProtocol {
+
     // MARK: - Properties
-    var viewStateUpdated: ((CharacterListViewState) -> Void)?
     private let useCase: CharacterUseCaseProtocol
     private var cellItems: [CharacterCellItemViewModel] = []
-    private var characters: [Character] = []
-    private var filteredCharacters: [Character] = []
+    private var cancellables = Set<AnyCancellable>()
+   @Published var characters: [Character] = []
+    var errorMessage: String = ""
+    
+    // MARK: - Output
+    var title: String { "Characters" }
+    
+
     // MARK: - Initializer
     init(useCase: CharacterUseCaseProtocol) {
         self.useCase = useCase
     }
-
+    
     private func onSuccess(data: [Character]) {
         characters = data
-        filteredCharacters = characters
         cellItems = characters.map { CharacterCellItemViewModel(item: $0) }
-        viewStateUpdated?(.loaded)
     }
-
-    private func onFailure(errorMessage: String) {
-        viewStateUpdated?(.failed(errorMessage))
-    }
-
-    // MARK: - Output
-    var numberOfRows: Int { filteredCharacters.count }
-    var title: String { "Characters" }
-
+    
     // MARK: - Input
-    func viewDidLoad() {
-        viewStateUpdated?(.loading)
-        useCase.loadCharacters { [weak self] response in
-            guard let self = self else { return }
-            switch response {
-            case .success(let characters):
-                self.onSuccess(data: characters)
-            case .failure(let error):
-                self.onFailure(errorMessage: error.localizedDescription)
+    
+    func fetchCharacters() {
+        
+        useCase.loadCharacters()
+            .receive(on: DispatchQueue.main)
+            .sink {[weak self] completion in
+                switch completion {
+                case .failure(let error):
+                    self?.errorMessage = error.localizedDescription
+                case .finished: break
+                }
+            } receiveValue: { [weak self] characters in
+                self?.onSuccess(data: characters)
             }
-        }
+            .store(in: &cancellables)
+
     }
 
-    func row(at index: Int) -> CharacterCellItemViewModel {
-        CharacterCellItemViewModel(item: filteredCharacters[index])
+    func row(for character: Character) -> CharacterCellItemViewModel {
+        CharacterCellItemViewModel(item: character)
     }
 
-    func filter(by value: String) {
-        if value.isEmpty {
-            filteredCharacters = characters
-        } else {
-        filteredCharacters = characters.filter { $0.name.contains(value) }
-        }
+    func filter(by value: Binding<String>) -> [Character]  {
+       characters.filter { $0.name.contains(value.wrappedValue) }
     }
 
-    func getSelectedItem(at index: Int) -> Character {
-        filteredCharacters[index]
-    }
+    
 }

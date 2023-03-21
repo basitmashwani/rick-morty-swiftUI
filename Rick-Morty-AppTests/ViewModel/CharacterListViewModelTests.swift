@@ -25,55 +25,28 @@ class CharacterListViewModelTest: XCTestCase {
                                            status: "Alive", species: "Human", gender: "Male", imgURL: "",
                                            lastLocation: "Citadel of Ricks", episodeCount: 90)]
 
-    func testViewDidLoad_whenCharactersAreSuccessfullyLoaded_shouldHaveLoadedViewState() {
-        // given
-        var currentState: CharacterListViewState?
-        let useCaseMock = MockCharacterUseCase()
-        useCaseMock.resultLoadCharacters = .success(Self.mockCharacters)
-        let viewModel = CharacterListViewModel(useCase: useCaseMock)
-        viewModel.viewStateUpdated = {
-            currentState = $0
-        }
-        // when
-        viewModel.viewDidLoad()
-        // then
-        XCTAssertEqual(currentState, .loaded)
-    }
-
-    func testViewDidLoad_whenCharacterAreFailedToLoad_shouldHaveFailedViewState() {
-        // given
-        var currentState: CharacterListViewState?
-        let useCaseMock = MockCharacterUseCase()
-        useCaseMock.resultLoadCharacters = .failure(RickMortyError.apiError)
-        let viewModel = CharacterListViewModel(useCase: useCaseMock)
-        viewModel.viewStateUpdated = {
-            currentState = $0
-        }
-        // when
-        viewModel.viewDidLoad()
-        // then
-        XCTAssertEqual(currentState, .failed("Ops Something went wrong. Please try later!"))
-    }
-
     func test_search_valid_character() {
         let useCaseMock = MockCharacterUseCase()
-        useCaseMock.resultLoadCharacters = .success(Self.mockCharacters)
         let viewModel = CharacterListViewModel(useCase: useCaseMock)
         // when
-        viewModel.viewDidLoad()
-        viewModel.filter(by: "Morty Smity")
+        viewModel.fetchCharacters()
+        
+        _ = XCTWaiter.wait(for: [expectation(description: "Wait for n seconds")], timeout: 2.0)
+
+       let items = viewModel.filter(by: .constant("Morty Smity"))
         // then
-        XCTAssertEqual(viewModel.numberOfRows, 1)
+        XCTAssertEqual(items.count, 1)
     }
 
     func test_search_invalid_character() {
         let useCaseMock = MockCharacterUseCase()
-        useCaseMock.resultLoadCharacters = .success(Self.mockCharacters)
         let viewModel = CharacterListViewModel(useCase: useCaseMock)
         // when
-        viewModel.viewDidLoad()
-        viewModel.filter(by: "Smity198")
+        viewModel.fetchCharacters()
+        
+        _ = XCTWaiter.wait(for: [expectation(description: "Wait for n seconds")], timeout: 2.0)
+        let items = viewModel.filter(by: .constant("Smity198"))
         // then
-        XCTAssertEqual(viewModel.numberOfRows, 0)
+        XCTAssertEqual(items.count, 0)
     }
 }

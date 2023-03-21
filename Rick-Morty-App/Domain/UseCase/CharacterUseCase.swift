@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import Combine
 protocol CharacterUseCaseProtocol {
-    func loadCharacters(onCompletion: @escaping CharacterResponse)
+    func loadCharacters() -> AnyPublisher<[Character], RickMortyError>
 }
 
 final class CharacterUseCase: CharacterUseCaseProtocol {
@@ -22,14 +23,11 @@ final class CharacterUseCase: CharacterUseCaseProtocol {
     }
     /// Load characters from character repo and returns the result
     /// - Parameter onCompletion: closure to return character array in case of success and error in the case of failure
-    func loadCharacters(onCompletion: @escaping CharacterResponse) {
-        characterRepository.fetchCharacterList { result in
-            switch result {
-            case .success(let characters):
-                onCompletion(.success(characters))
-            case .failure:
-                onCompletion(.failure(RickMortyError.apiError))
-            }
-        }
+    func loadCharacters() -> AnyPublisher<[Character], RickMortyError> {
+        characterRepository
+            .fetchCharacterList()
+            .map { $0.characters.map { $0.toDomain()}}
+            .eraseToAnyPublisher()
+        
     }
 }

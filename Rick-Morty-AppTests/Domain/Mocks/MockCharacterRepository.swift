@@ -6,12 +6,24 @@
 //
 
 import Foundation
+import Combine
 
 @testable import Rick_Morty_App
 
 final class MockCharacterRepository: CharacterRepositoryProtocol {
-    var resultLoadCharacters: Result<[Character], Error> = .success([])
-    func fetchCharacterList(onCompletion: @escaping CharacterResponse) {
-        onCompletion(resultLoadCharacters)
+    var networker: NetworkerProtocol
+    
+    init(networker: NetworkerProtocol = Networker()) {
+        self.networker = networker
     }
+    var resultLoadCharacters: Result<[Character], Error> = .success([])
+
+    func fetchCharacterList() -> AnyPublisher<CharactersDTO, RickMortyError> {
+        return Just(CharactersDTO.mock)
+            .setFailureType(to: RickMortyError.self)
+            .eraseToAnyPublisher()
+    }
+    
+    
+    
 }

@@ -5,7 +5,13 @@
 //  Created by SyedAbdulBasit on 05/02/2022.
 //
 import UIKit
-final class CharacterDetailDIContainer: CharacterDetailCoordinatorDependencies {
+
+
+protocol CharacterDetailDependencies {
+   func makeCharacterDetailView() -> CharacterDetailView
+}
+
+final class CharacterDetailDIContainer: CharacterDetailDependencies {
     public let character: Character
     init(character: Character) {
         self.character = character
@@ -18,14 +24,8 @@ final class CharacterDetailDIContainer: CharacterDetailCoordinatorDependencies {
     }
     /// Get  CharacterDetail View Controller and Setup View Model
     /// - Returns:  CharacterListViewController
-    func makeCharacterDetailViewController() -> CharacterDetailViewController {
-        CharacterDetailViewController(viewModel: makeCharacterDetailViewModel())
+    func makeCharacterDetailView() -> CharacterDetailView {
+        CharacterDetailView(viewModel: makeCharacterDetailViewModel())
     }
-    // MARK: - Coordinators
-    /// Get  CharacterList Coordinator
-    /// - Parameter navigation: UINavigationController
-    /// - Returns:  Character List Coordinator
-    func  characterDetailCoordinator(navigation: UINavigationController) -> CharacterDetailCoordinator {
-        CharacterDetailCoordinator(dependencies: self, parent: navigation)
-    }
+
 }

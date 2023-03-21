@@ -16,15 +16,20 @@ protocol CharacterDetailViewModelOutput {
     var imageURL: String { get }
 }
 
-struct CharacterDetailViewModel: CharacterDetailViewModelOutput {
+class CharacterDetailViewModel: ObservableObject {
+    
     // MARK: - Properties
     private let character: Character
-
+    
     init(character: Character) {
         self.character = character
     }
-    // MARK: - Output
+}
 
+extension CharacterDetailViewModel: CharacterDetailViewModelOutput {
+    
+    // MARK: - Output
+    
     var name: String { character.name }
     var species: String { character.species }
     var gender: String { character.gender }

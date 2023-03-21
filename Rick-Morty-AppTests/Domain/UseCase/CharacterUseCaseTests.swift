@@ -6,37 +6,47 @@
 //
 
 import XCTest
+import Combine
 @testable import Rick_Morty_App
 
 class CharacterUseCaseTests: XCTestCase {
     func testLoadCharacters_whenSuccessfullyFetchesCharacter_shouldHaveCharacters() {
         // given
+        
+         var cancellables = Set<AnyCancellable>()
+
         let mockCharacterRepository = MockCharacterRepository()
         mockCharacterRepository.resultLoadCharacters = .success(MockCharacterData.characterData)
         let useCase = CharacterUseCase(characterRepository: mockCharacterRepository)
         // when
-        useCase.loadCharacters { response in
-            switch response {
-                // then
-            case .success(let data):
-                XCTAssertEqual(data.count, MockCharacterData.characterData.count)
-            case .failure: break
+        useCase.loadCharacters()
+            .sink { _ in
+                
+            } receiveValue: { characters in
+                XCTAssertEqual(characters.count, MockCharacterData.characterData.count)
             }
-        }
+            .store(in: &cancellables)
     }
     func testLoadCharacters_whenFailedFetchingCharacters_serverReturnsError() {
         // given
+        var cancellables = Set<AnyCancellable>()
         let mockCharacterRepository = MockCharacterRepository()
         mockCharacterRepository.resultLoadCharacters = .failure(RickMortyError.apiError)
         // when
         let useCase = CharacterUseCase(characterRepository: mockCharacterRepository)
-        useCase.loadCharacters { response in
-            switch response {
-            case .success: break
-            case .failure(let error):
-                // then
-                XCTAssertEqual(error.localizedDescription, RickMortyError.apiError.errorDescription)
-            }
-        }
+        useCase.loadCharacters()
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                    
+                case .failure(let error):
+                    XCTAssertEqual(error.localizedDescription, RickMortyError.apiError.errorDescription)
+                }
+            }, receiveValue: { _ in
+                
+            })
+            .store(in: &cancellables)
+
     }
 }

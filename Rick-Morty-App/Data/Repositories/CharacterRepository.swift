@@ -6,31 +6,35 @@
 //
 
 import Foundation
- typealias CharacterResponse = (Result<[Character], Error>) -> Void
+import Combine
 
 protocol CharacterRepositoryProtocol {
+    var networker: NetworkerProtocol { get }
     /// it will fetch characters.
     /// - Parameter completion: block triggered when fetching is completed.
-    func fetchCharacterList(onCompletion: @escaping CharacterResponse)
+    func fetchCharacterList() -> AnyPublisher<CharactersDTO, RickMortyError>
 }
 
 final class CharacterRepository: CharacterRepositoryProtocol {
+    var networker: NetworkerProtocol
+    
+    init(networker: NetworkerProtocol = Networker()) {
+        self.networker = networker
+    }
     // MARK: - Protocol Implementation
     /// Fetch characters using datastore from api.
     /// - Parameters: closure to return character array in case of success and error in the case of failure
-    func fetchCharacterList(onCompletion: @escaping CharacterResponse) {
-        RestService.shared
-            .request(.get, path: .getCharacter, parameters: nil)
-            .handleRequest { (result: Result<CharactersDTO, RickMortyError>) in
-                switch result {
-                case .success(let charactersResponse):
-                    let characters = charactersResponse.characters.map { $0.toDomain() }
-                    onCompletion(.success(characters))
-                case .failure(let error):
-                    onCompletion(.failure(RickMortyError.other(error)))
-                case .success(let characterResponse) where characterResponse.characters.isEmpty:
-                onCompletion(.failure(RickMortyError.characterNotFound))
-                }
+    func fetchCharacterList() -> AnyPublisher<CharactersDTO, RickMortyError> {
+        networker
+            .get(
+                type: CharactersDTO.self,
+                url: Endpoint.characters.url,
+                headers: nil
+            )
+            .mapError { error in
+                RickMortyError.other(error)
             }
-        }
+            .eraseToAnyPublisher()
+            
+    }
 }

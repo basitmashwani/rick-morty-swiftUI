@@ -6,7 +6,11 @@
 //
 import UIKit.UINavigationController
 
-final class CharacterListDIContainer: CharacterListCoordinatorDependencies {
+protocol CharacterListDependencies {
+    func makeCharacterDetailContainer(character: Character) -> CharacterDetailDIContainer
+}
+
+final class CharacterListDIContainer: CharacterListDependencies {
     // MARK: - Use Case
     /// Get Character Use Case
     /// - Returns:  CharacterUseCaseProtocol
@@ -27,19 +31,13 @@ final class CharacterListDIContainer: CharacterListCoordinatorDependencies {
     }
     /// Get  CharacterList View Controller and Setup View Model
     /// - Returns:  CharacterListViewController
-    func makeCharacterListViewController() -> CharacterListViewController {
-        let characterListVC = CharacterListViewController(viewModel: makeCharacterViewModel())
+    func makeCharacterListView() -> CharacterListView {
+        let characterListVC = CharacterListView(viewModel: makeCharacterViewModel(), router: .init())
         return characterListVC
     }
-    // MARK: - Coordinators
-    /// Get  CharacterList Coordinator
-    /// - Parameter navigation: UINavigationController
-    /// - Returns:  Character List Coordinator
-    func  characterCoordinator(navigation: UINavigationController) -> CharacterListCoordinator {
-        CharacterListCoordinator(dependencies: self, parent: navigation)
+    
+    func makeCharacterDetailContainer(character: Character) -> CharacterDetailDIContainer {
+        CharacterDetailDIContainer(character: character)
     }
-    // MARK: - DIContainers of CharacterDetail
-    func makeCharacterDetailDIContainer(character: Character) -> CharacterDetailDIContainer {
-        return CharacterDetailDIContainer(character: character)
-    }
+   
 }
